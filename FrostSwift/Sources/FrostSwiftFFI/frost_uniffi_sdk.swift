@@ -968,12 +968,12 @@ public func FfiConverterTypeFirstRoundCommitment_lower(_ value: FirstRoundCommit
 
 
 public struct FrostKeyPackage {
-    public var identifier: String
+    public var identifier: ParticipantIdentifier
     public var data: Data
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(identifier: String, data: Data) {
+    public init(identifier: ParticipantIdentifier, data: Data) {
         self.identifier = identifier
         self.data = data
     }
@@ -1001,13 +1001,13 @@ extension FrostKeyPackage: Equatable, Hashable {
 public struct FfiConverterTypeFrostKeyPackage: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FrostKeyPackage {
         return try FrostKeyPackage(
-            identifier: FfiConverterString.read(from: &buf), 
+            identifier: FfiConverterTypeParticipantIdentifier.read(from: &buf), 
             data: FfiConverterData.read(from: &buf)
         )
     }
 
     public static func write(_ value: FrostKeyPackage, into buf: inout [UInt8]) {
-        FfiConverterString.write(value.identifier, into: &buf)
+        FfiConverterTypeParticipantIdentifier.write(value.identifier, into: &buf)
         FfiConverterData.write(value.data, into: &buf)
     }
 }
@@ -2264,6 +2264,27 @@ extension Round2Error: Equatable, Hashable {}
 
 extension Round2Error: Error { }
 
+fileprivate struct FfiConverterOptionTypeParticipantIdentifier: FfiConverterRustBuffer {
+    typealias SwiftType = ParticipantIdentifier?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeParticipantIdentifier.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeParticipantIdentifier.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
 fileprivate struct FfiConverterSequenceTypeFrostSignatureShare: FfiConverterRustBuffer {
     typealias SwiftType = [FrostSignatureShare]
 
@@ -2452,6 +2473,33 @@ public func generateNoncesAndCommitments(secretShare: FrostSecretKeyShare) throw
     )
 }
 
+public func identifierFromJsonString(string: String)  -> ParticipantIdentifier? {
+    return try!  FfiConverterOptionTypeParticipantIdentifier.lift(
+        try! rustCall() {
+    uniffi_frost_uniffi_sdk_fn_func_identifier_from_json_string(
+        FfiConverterString.lower(string),$0)
+}
+    )
+}
+
+public func identifierFromString(string: String) throws -> ParticipantIdentifier {
+    return try  FfiConverterTypeParticipantIdentifier.lift(
+        try rustCallWithError(FfiConverterTypeFrostError.lift) {
+    uniffi_frost_uniffi_sdk_fn_func_identifier_from_string(
+        FfiConverterString.lower(string),$0)
+}
+    )
+}
+
+public func identifierFromUint16(unsignedUint: UInt16) throws -> ParticipantIdentifier {
+    return try  FfiConverterTypeParticipantIdentifier.lift(
+        try rustCallWithError(FfiConverterTypeFrostError.lift) {
+    uniffi_frost_uniffi_sdk_fn_func_identifier_from_uint16(
+        FfiConverterUInt16.lower(unsignedUint),$0)
+}
+    )
+}
+
 public func newSigningPackage(message: Message, commitments: [FrostSigningCommitments]) throws -> FrostSigningPackage {
     return try  FfiConverterTypeFrostSigningPackage.lift(
         try rustCallWithError(FfiConverterTypeCoordinationError.lift) {
@@ -2607,6 +2655,15 @@ private var initializationResult: InitializationResult {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_frost_uniffi_sdk_checksum_func_generate_nonces_and_commitments() != 47101) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_frost_uniffi_sdk_checksum_func_identifier_from_json_string() != 56485) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_frost_uniffi_sdk_checksum_func_identifier_from_string() != 3795) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_frost_uniffi_sdk_checksum_func_identifier_from_uint16() != 11722) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_frost_uniffi_sdk_checksum_func_new_signing_package() != 50111) {

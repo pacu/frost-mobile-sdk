@@ -16,7 +16,7 @@ use frost_core::{
     keys::{IdentifierList, KeyPackage, PublicKeyPackage, VerifyingShare},
     Ciphersuite, Error, Identifier, VerifyingKey,
 };
-use hex::ToHex;
+
 use rand::thread_rng;
 use std::{
     collections::{BTreeMap, HashMap},
@@ -213,7 +213,7 @@ pub fn validate_config(config: &Configuration) -> Result<(), ConfigurationError>
 
 #[derive(uniffi::Record, Clone)]
 pub struct FrostKeyPackage {
-    pub identifier: String,
+    pub identifier: ParticipantIdentifier,
     pub data: Vec<u8>,
 }
 
@@ -288,7 +288,7 @@ impl FrostKeyPackage {
         let serialized_package = key_package.serialize()?;
         let identifier = key_package.identifier();
         Ok(FrostKeyPackage {
-            identifier: identifier.serialize().encode_hex(),
+            identifier: ParticipantIdentifier::from_identifier(*identifier)?,
             data: serialized_package,
         })
     }
@@ -414,4 +414,33 @@ impl FrostPublicKeyPackage {
 
         Ok(PublicKeyPackage::new(btree_map, verifying_key))
     }
+}
+
+#[uniffi::export]
+pub fn identifier_from_json_string(string: String) -> Option<ParticipantIdentifier> {
+    ParticipantIdentifier::from_json_string::<E>(string.as_str())
+}
+
+#[uniffi::export]
+pub fn identifier_from_string(string: String) -> Result<ParticipantIdentifier, FrostError> {
+    let identifier = Identifier::<E>::derive(string.as_bytes())
+        .map_err(FrostError::map_err)?;
+
+    let participant = ParticipantIdentifier::from_identifier(identifier)
+        .map_err(FrostError::map_err)?;
+    Ok(
+        participant
+    )
+}
+
+#[uniffi::export]
+pub fn identifier_from_uint16(unsigned_uint: u16) -> Result<ParticipantIdentifier, FrostError> {
+    let identifier = Identifier::<E>::try_from(unsigned_uint)
+        .map_err(FrostError::map_err)?;
+
+    let participant = ParticipantIdentifier::from_identifier(identifier)
+        .map_err(FrostError::map_err)?;
+    Ok(
+        participant
+    )
 }

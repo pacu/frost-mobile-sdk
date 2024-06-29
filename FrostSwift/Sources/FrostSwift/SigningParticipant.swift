@@ -9,7 +9,7 @@ import Foundation
 import FrostSwiftFFI
 
 /// A participant of a FROST signature scheme
-public class Participant {
+public class SigningParticipant {
 
     let keyPackage: KeyPackage
 

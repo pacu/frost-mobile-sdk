@@ -15,7 +15,7 @@ public struct Configuration {
     let minSigners: UInt16
     let secret: Data?
 
-    init(maxSigners: UInt16, minSigners: UInt16, secret: Data?) throws {
+    public init(maxSigners: UInt16, minSigners: UInt16, secret: Data?) throws {
         guard minSigners < maxSigners
         else {
             throw FrostError.invalidConfiguration

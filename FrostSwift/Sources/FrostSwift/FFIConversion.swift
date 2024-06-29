@@ -17,7 +17,7 @@ extension Configuration {
 
 extension ParticipantIdentifier {
     func toIdentifier() -> Identifier {
-        Identifier(identifier: self.data)
+        Identifier(participant: self)
     }
 }
 
@@ -26,6 +26,7 @@ extension Identifier {
         self.id
     }
 }
+
 extension TrustedKeyGeneration {
     func toKeyGeneration() -> TrustedDealerCoordinator.KeyGeneration {
         
