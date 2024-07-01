@@ -14,7 +14,7 @@ type E = frost_ed25519::Ed25519Sha512;
 use rand::thread_rng;
 use uniffi;
 
-use crate::{FrostSecretKeyShare, ParticipantIdentifier};
+use crate::{FrostKeyPackage, ParticipantIdentifier};
 
 #[cfg(not(feature = "redpallas"))]
 use crate::{coordinator::FrostSigningPackage, FrostKeyPackage};
@@ -94,26 +94,21 @@ pub struct FirstRoundCommitment {
 
 #[uniffi::export]
 pub fn generate_nonces_and_commitments(
-    secret_share: FrostSecretKeyShare,
+    key_package: FrostKeyPackage,
 ) -> Result<FirstRoundCommitment, Round1Error> {
     let mut rng = thread_rng();
 
-    let secret_share = secret_share
-        .to_secret_share::<E>()
+    let key_package = key_package.into_key_package::<E>()
         .map_err(|_| Round1Error::InvalidKeyPackage)?;
 
-    let _ = secret_share
-        .verify()
-        .map_err(|_| Round1Error::InvalidKeyPackage)?;
-
-    let signing_share = secret_share.signing_share();
+    let signing_share = key_package.signing_share();
     let (nonces, commitments) = frost::round1::commit(signing_share, &mut rng);
 
     Ok(FirstRoundCommitment {
         nonces: FrostSigningNonces::from_nonces(nonces)
             .map_err(|_| Round1Error::NonceSerializationError)?,
         commitments: FrostSigningCommitments::with_identifier_and_commitments(
-            *secret_share.identifier(),
+            *key_package.identifier(),
             commitments,
         )
         .map_err(|_| Round1Error::CommitmentSerializationError)?,

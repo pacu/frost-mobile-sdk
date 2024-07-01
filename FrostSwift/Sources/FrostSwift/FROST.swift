@@ -1,10 +1,7 @@
 import FrostSwiftFFI
 import Foundation
 
-enum FrostError: Error {
-    case invalidConfiguration
-    case malformedIdentifier
-}
+
 
 enum FrostSwift {
 
@@ -15,6 +12,7 @@ enum FrostSwift {
 
 public typealias Message = FrostSwiftFFI.Message
 
+/// The public key of a given FROST  signature scheme.
 public struct PublicKeyPackage {
     let package: FrostPublicKeyPackage
 
@@ -44,7 +42,10 @@ public struct PublicKeyPackage {
 
     }
 }
-
+/// Identifier of a signing participant of a FROST signature scheme.
+/// an identifier is unique within a signature scheme.
+/// - Note: a participant that is the same actor may (and most probably will) have
+/// a different identifier when participating in different FROST signature schemes
 public struct Identifier: Hashable {
     let id: ParticipantIdentifier
 
@@ -113,7 +114,7 @@ public struct RandomizedParams {
         )
     }
 
-    func randomizer() throws -> Randomizer {
+    public func randomizer() throws -> Randomizer {
         Randomizer(
             randomizer: try FrostSwiftFFI.randomizerFromParams(
                 randomizedParams: params
@@ -141,8 +142,12 @@ public struct VerifyingKey {
 
 }
 
+/// _Secret_ key package of a given signing participant.
+/// - important: do not share this key package. Trusted dealers must
+/// send each participant's `KeyPackage` through an **authenticated** and
+/// **encrypted** communication channel.
 public struct KeyPackage {
-    private let package: FrostKeyPackage
+    let package: FrostKeyPackage
 
     init(package: FrostKeyPackage) {
         self.package = package
@@ -153,11 +158,21 @@ public struct KeyPackage {
     }
 }
 
+/// Secret share resulting of a Key Generation (Trusted or distributed).
+///  - important: Do not distribute over insecure and
+///  unauthenticated channels
 public struct SecretShare {
     let share: FrostSecretKeyShare
 
     init(share: FrostSecretKeyShare) {
         self.share = share
+    }
+
+    /// Verifies the Secret share and creates a `KeyPackage`
+    public func verifyAndGetKeyPackage() throws -> KeyPackage {
+        let package = try verifyAndGetKeyPackageFrom(secretShare: self.share)
+
+        return KeyPackage(package: package)
     }
 }
 
@@ -173,6 +188,19 @@ public struct SigningCommitments {
 
     init(commitment: FrostSigningCommitments) {
         self.commitment = commitment
+    }
+}
+
+/// Nonces are produced along with signing commitments. Nonces must not be
+/// shared with others. They must be kept in memory to perform a signature share
+/// on FROST round 2.
+/// - Important: Nonces must not be shared with others. They must be kept in
+/// memory for a later use
+public struct SigningNonces {
+    let nonces: FrostSigningNonces
+
+    init(nonces: FrostSigningNonces) {
+        self.nonces = nonces
     }
 }
 
@@ -206,7 +234,8 @@ public struct SigningPackage: Equatable {
     }
 }
 /// Signature produced by aggregating the `SignatureShare`s of the
-/// different
+/// different _t_ participants of a threshold signature.
+/// - note: to validate a signature use the `PublicKeyPackage` method.
 public struct Signature: Equatable, Hashable {
     let signature: FrostSignature
 

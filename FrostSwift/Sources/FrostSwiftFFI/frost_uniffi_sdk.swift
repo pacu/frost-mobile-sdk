@@ -2464,11 +2464,11 @@ public func fromHexString(hexString: String) throws -> FrostRandomizer {
     )
 }
 
-public func generateNoncesAndCommitments(secretShare: FrostSecretKeyShare) throws -> FirstRoundCommitment {
+public func generateNoncesAndCommitments(keyPackage: FrostKeyPackage) throws -> FirstRoundCommitment {
     return try  FfiConverterTypeFirstRoundCommitment.lift(
         try rustCallWithError(FfiConverterTypeRound1Error.lift) {
     uniffi_frost_uniffi_sdk_fn_func_generate_nonces_and_commitments(
-        FfiConverterTypeFrostSecretKeyShare.lower(secretShare),$0)
+        FfiConverterTypeFrostKeyPackage.lower(keyPackage),$0)
 }
     )
 }
@@ -2654,7 +2654,7 @@ private var initializationResult: InitializationResult {
     if (uniffi_frost_uniffi_sdk_checksum_func_from_hex_string() != 29801) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_frost_uniffi_sdk_checksum_func_generate_nonces_and_commitments() != 47101) {
+    if (uniffi_frost_uniffi_sdk_checksum_func_generate_nonces_and_commitments() != 1477) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_frost_uniffi_sdk_checksum_func_identifier_from_json_string() != 56485) {

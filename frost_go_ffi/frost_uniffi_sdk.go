@@ -366,7 +366,7 @@ func uniffiCheckChecksums() {
 		checksum := rustCall(func(uniffiStatus *C.RustCallStatus) C.uint16_t {
 			return C.uniffi_frost_uniffi_sdk_checksum_func_generate_nonces_and_commitments(uniffiStatus)
 		})
-		if checksum != 47101 {
+		if checksum != 1477 {
 			// If this happens try cleaning and rebuilding your project
 			panic("frost_uniffi_sdk: uniffi_frost_uniffi_sdk_checksum_func_generate_nonces_and_commitments: UniFFI API checksum mismatch")
 		}
@@ -3711,9 +3711,9 @@ func FromHexString(hexString string) (FrostRandomizer, error) {
 	}
 }
 
-func GenerateNoncesAndCommitments(secretShare FrostSecretKeyShare) (FirstRoundCommitment, error) {
+func GenerateNoncesAndCommitments(keyPackage FrostKeyPackage) (FirstRoundCommitment, error) {
 	_uniffiRV, _uniffiErr := rustCallWithError(FfiConverterTypeRound1Error{}, func(_uniffiStatus *C.RustCallStatus) RustBufferI {
-		return C.uniffi_frost_uniffi_sdk_fn_func_generate_nonces_and_commitments(FfiConverterTypeFrostSecretKeyShareINSTANCE.Lower(secretShare), _uniffiStatus)
+		return C.uniffi_frost_uniffi_sdk_fn_func_generate_nonces_and_commitments(FfiConverterTypeFrostKeyPackageINSTANCE.Lower(keyPackage), _uniffiStatus)
 	})
 	if _uniffiErr != nil {
 		var _uniffiDefaultValue FirstRoundCommitment

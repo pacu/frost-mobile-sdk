@@ -52,8 +52,10 @@ func TestTrustedDealerRedPallas(t *testing.T) {
 	var commitments []FrostSigningCommitments
 
 	for participant, secretShare := range shares {
+
+		keyPackage, err := VerifyAndGetKeyPackageFrom(secretShare)
 		// generates a nonce and a commitment to be used (round 1)
-		firstRoundCommitment, err := GenerateNoncesAndCommitments(secretShare)
+		firstRoundCommitment, err := GenerateNoncesAndCommitments(keyPackage)
 		if err != nil {
 			t.Fatalf("Failed to generate nonces and commitments: %v", err)
 		}

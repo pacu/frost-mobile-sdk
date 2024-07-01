@@ -10,8 +10,6 @@ public class TrustedDealerTests: XCTestCase {
         // generate keys with default identifiers
         let keys = try dealer.generateKeys()
 
-        let message = Message(data: "i am a message".data(using: .utf8)!)
-
         XCTAssertEqual(keys.secretShares.count, 3)
 
     }
@@ -69,6 +67,5 @@ public class TrustedDealerTests: XCTestCase {
 
         /// Same identifiers are returned
         XCTAssertEqual(expectedIdentifiers, result)
-
     }
 }

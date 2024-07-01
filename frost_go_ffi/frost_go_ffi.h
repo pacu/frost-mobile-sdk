@@ -107,7 +107,7 @@ RustBuffer uniffi_frost_uniffi_sdk_fn_func_from_hex_string(
 );
 
 RustBuffer uniffi_frost_uniffi_sdk_fn_func_generate_nonces_and_commitments(
-	RustBuffer secret_share,
+	RustBuffer key_package,
 	RustCallStatus* out_status
 );
 
