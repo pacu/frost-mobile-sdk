@@ -22,10 +22,15 @@ enum ParticipantError: Error {
     case missingRandomizer
 }
 
+/// This is the configuration of Round 2. This means that all participants of the
+/// threshold signature round will need to share a `SigningPackage` and
+/// for the case of Re-Randomized FROST, a `Randomizer`. If the different
+/// participants don't use the same randomizer the signature creation will fail.
 public struct Round2Configuration {
     public var signingPackage: SigningPackage
     public var randomizer: Randomizer?
 }
+
 /// A participant of a FROST signature scheme
 public class SigningParticipant {
     let publicKey: PublicKeyPackage

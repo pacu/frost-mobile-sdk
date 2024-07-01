@@ -49,15 +49,44 @@ enum FROSTCoordinatorError: Error {
     }
 }
 
+/// Protocol that defines the minimum functionality of a FROST signature
+/// scheme Coordinator. A coordinator can be part of the signature or not.  For your
+/// convenience, ``NonSigningCoordinator`` and ``SigningCoordinator``
+/// implementations are provided.
+/// - Important: Fallback because of misbehaving participants are not considered
+/// within this protocol. Implementors must define their own strategies to deal with such
+/// scenarios.
+/// - Note: This protocol is bound to actors because it is assumed that several
+/// participants may try to interact with it concurrently.
 public protocol FROSTCoordinator: Actor {
+    /// configuration of the FROST threshold scheme
     var configuration: Configuration { get }
+    /// public key tha represent this signature scheme
     var publicKeyPackage: PublicKeyPackage { get }
+    /// message to be signed by the _t_ participants
     var message: Message { get }
+    /// this is the configuration of Round 2.
     var round2Config: Round2Configuration? { get }
+    /// receives a signing commitment from a given participant
+    /// - parameter commitment: the SigningCommitment from signature participant
+    /// - throws: should throw ``FROSTCoordinatorError.alreadyReceivedCommitmentFromIdentifier`` when
+    /// receiving a commitment from an Identifier that was received already independently from whether
+    /// it is the same or a different one.
     func receive(commitment: SigningCommitments) throws
+    /// Creates a ``Round2Configuration`` struct with a ``SigningPackage`` and
+    /// ``Randomizer`` for the case that Re-Randomized FROST is used.
+    /// - throws: ``FROSTCoordinatorError.signingPackageAlreadyCreated`` if this function was
+    /// called already or ``FROSTCoordinatorError.incorrectNumberOfCommitments``
+    /// when the number of commitments gathered is less or more than the specified by the ``Configuration``
     func createSigningPackage() throws -> Round2Configuration
+    /// Receives a ``SignatureShare`` from a ``SigningParticipant``.
+    /// - throws: ``FROSTCoordinatorError.alreadyReceivedSignatureShareFromIdentifier``
+    /// when the same participant sends the same share repeatedly
     func receive(signatureShare: SignatureShare) throws
+    /// Aggregates all shares and creates the FROST ``Signature``
+    /// - throws: several things can go wrong here. 🥶
     func aggregate() throws -> Signature
+    /// Verify a ``Signature`` with the ``PublicKeyPackage`` of this coordinator.
     func verify(signature: Signature) throws
 }
 
@@ -80,7 +109,7 @@ public actor NonSigningCoordinator: FROSTCoordinator {
     public func receive(commitment: SigningCommitments) throws {
         // TODO: validate that the commitment belongs to a known identifier
         guard commitments[commitment.identifier] == nil else {
-            throw CoordinationError.FailedToCreateSigningPackage
+            throw FROSTCoordinatorError.alreadyReceivedCommitmentFromIdentifier(commitment.identifier)
         }
 
         self.commitments[commitment.identifier] = commitment
