@@ -41,7 +41,9 @@ class NotRedPallasTests: XCTestCase {
         var commitments = [FrostSigningCommitments]()
 
         for (participant, secretShare) in shares {
-            let firstRoundCommitment = try generateNoncesAndCommitments(secretShare: secretShare)
+
+            let keyPackage = try verifyAndGetKeyPackageFrom(secretShare: secretShare)
+            let firstRoundCommitment = try generateNoncesAndCommitments(keyPackage: keyPackage)
 
             nonces[participant] = firstRoundCommitment.nonces
             commitments.append(firstRoundCommitment.commitments)

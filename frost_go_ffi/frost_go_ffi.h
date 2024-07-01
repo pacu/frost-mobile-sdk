@@ -107,7 +107,22 @@ RustBuffer uniffi_frost_uniffi_sdk_fn_func_from_hex_string(
 );
 
 RustBuffer uniffi_frost_uniffi_sdk_fn_func_generate_nonces_and_commitments(
-	RustBuffer secret_share,
+	RustBuffer key_package,
+	RustCallStatus* out_status
+);
+
+RustBuffer uniffi_frost_uniffi_sdk_fn_func_identifier_from_json_string(
+	RustBuffer string,
+	RustCallStatus* out_status
+);
+
+RustBuffer uniffi_frost_uniffi_sdk_fn_func_identifier_from_string(
+	RustBuffer string,
+	RustCallStatus* out_status
+);
+
+RustBuffer uniffi_frost_uniffi_sdk_fn_func_identifier_from_uint16(
+	uint16_t unsigned_uint,
 	RustCallStatus* out_status
 );
 
@@ -500,6 +515,18 @@ uint16_t uniffi_frost_uniffi_sdk_checksum_func_from_hex_string(
 );
 
 uint16_t uniffi_frost_uniffi_sdk_checksum_func_generate_nonces_and_commitments(
+	RustCallStatus* out_status
+);
+
+uint16_t uniffi_frost_uniffi_sdk_checksum_func_identifier_from_json_string(
+	RustCallStatus* out_status
+);
+
+uint16_t uniffi_frost_uniffi_sdk_checksum_func_identifier_from_string(
+	RustCallStatus* out_status
+);
+
+uint16_t uniffi_frost_uniffi_sdk_checksum_func_identifier_from_uint16(
 	RustCallStatus* out_status
 );
 

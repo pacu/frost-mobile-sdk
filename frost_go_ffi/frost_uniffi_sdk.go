@@ -366,9 +366,36 @@ func uniffiCheckChecksums() {
 		checksum := rustCall(func(uniffiStatus *C.RustCallStatus) C.uint16_t {
 			return C.uniffi_frost_uniffi_sdk_checksum_func_generate_nonces_and_commitments(uniffiStatus)
 		})
-		if checksum != 47101 {
+		if checksum != 1477 {
 			// If this happens try cleaning and rebuilding your project
 			panic("frost_uniffi_sdk: uniffi_frost_uniffi_sdk_checksum_func_generate_nonces_and_commitments: UniFFI API checksum mismatch")
+		}
+	}
+	{
+		checksum := rustCall(func(uniffiStatus *C.RustCallStatus) C.uint16_t {
+			return C.uniffi_frost_uniffi_sdk_checksum_func_identifier_from_json_string(uniffiStatus)
+		})
+		if checksum != 56485 {
+			// If this happens try cleaning and rebuilding your project
+			panic("frost_uniffi_sdk: uniffi_frost_uniffi_sdk_checksum_func_identifier_from_json_string: UniFFI API checksum mismatch")
+		}
+	}
+	{
+		checksum := rustCall(func(uniffiStatus *C.RustCallStatus) C.uint16_t {
+			return C.uniffi_frost_uniffi_sdk_checksum_func_identifier_from_string(uniffiStatus)
+		})
+		if checksum != 3795 {
+			// If this happens try cleaning and rebuilding your project
+			panic("frost_uniffi_sdk: uniffi_frost_uniffi_sdk_checksum_func_identifier_from_string: UniFFI API checksum mismatch")
+		}
+	}
+	{
+		checksum := rustCall(func(uniffiStatus *C.RustCallStatus) C.uint16_t {
+			return C.uniffi_frost_uniffi_sdk_checksum_func_identifier_from_uint16(uniffiStatus)
+		})
+		if checksum != 11722 {
+			// If this happens try cleaning and rebuilding your project
+			panic("frost_uniffi_sdk: uniffi_frost_uniffi_sdk_checksum_func_identifier_from_uint16: UniFFI API checksum mismatch")
 		}
 	}
 	{
@@ -1108,12 +1135,12 @@ func (_ FfiDestroyerTypeFirstRoundCommitment) Destroy(value FirstRoundCommitment
 }
 
 type FrostKeyPackage struct {
-	Identifier string
+	Identifier ParticipantIdentifier
 	Data       []byte
 }
 
 func (r *FrostKeyPackage) Destroy() {
-	FfiDestroyerString{}.Destroy(r.Identifier)
+	FfiDestroyerTypeParticipantIdentifier{}.Destroy(r.Identifier)
 	FfiDestroyerBytes{}.Destroy(r.Data)
 }
 
@@ -1127,7 +1154,7 @@ func (c FfiConverterTypeFrostKeyPackage) Lift(rb RustBufferI) FrostKeyPackage {
 
 func (c FfiConverterTypeFrostKeyPackage) Read(reader io.Reader) FrostKeyPackage {
 	return FrostKeyPackage{
-		FfiConverterStringINSTANCE.Read(reader),
+		FfiConverterTypeParticipantIdentifierINSTANCE.Read(reader),
 		FfiConverterBytesINSTANCE.Read(reader),
 	}
 }
@@ -1137,7 +1164,7 @@ func (c FfiConverterTypeFrostKeyPackage) Lower(value FrostKeyPackage) RustBuffer
 }
 
 func (c FfiConverterTypeFrostKeyPackage) Write(writer io.Writer, value FrostKeyPackage) {
-	FfiConverterStringINSTANCE.Write(writer, value.Identifier)
+	FfiConverterTypeParticipantIdentifierINSTANCE.Write(writer, value.Identifier)
 	FfiConverterBytesINSTANCE.Write(writer, value.Data)
 }
 
@@ -3318,6 +3345,43 @@ func (c FfiConverterTypeRound2Error) Write(writer io.Writer, value *Round2Error)
 	}
 }
 
+type FfiConverterOptionalTypeParticipantIdentifier struct{}
+
+var FfiConverterOptionalTypeParticipantIdentifierINSTANCE = FfiConverterOptionalTypeParticipantIdentifier{}
+
+func (c FfiConverterOptionalTypeParticipantIdentifier) Lift(rb RustBufferI) *ParticipantIdentifier {
+	return LiftFromRustBuffer[*ParticipantIdentifier](c, rb)
+}
+
+func (_ FfiConverterOptionalTypeParticipantIdentifier) Read(reader io.Reader) *ParticipantIdentifier {
+	if readInt8(reader) == 0 {
+		return nil
+	}
+	temp := FfiConverterTypeParticipantIdentifierINSTANCE.Read(reader)
+	return &temp
+}
+
+func (c FfiConverterOptionalTypeParticipantIdentifier) Lower(value *ParticipantIdentifier) RustBuffer {
+	return LowerIntoRustBuffer[*ParticipantIdentifier](c, value)
+}
+
+func (_ FfiConverterOptionalTypeParticipantIdentifier) Write(writer io.Writer, value *ParticipantIdentifier) {
+	if value == nil {
+		writeInt8(writer, 0)
+	} else {
+		writeInt8(writer, 1)
+		FfiConverterTypeParticipantIdentifierINSTANCE.Write(writer, *value)
+	}
+}
+
+type FfiDestroyerOptionalTypeParticipantIdentifier struct{}
+
+func (_ FfiDestroyerOptionalTypeParticipantIdentifier) Destroy(value *ParticipantIdentifier) {
+	if value != nil {
+		FfiDestroyerTypeParticipantIdentifier{}.Destroy(*value)
+	}
+}
+
 type FfiConverterSequenceTypeFrostSignatureShare struct{}
 
 var FfiConverterSequenceTypeFrostSignatureShareINSTANCE = FfiConverterSequenceTypeFrostSignatureShare{}
@@ -3647,15 +3711,45 @@ func FromHexString(hexString string) (FrostRandomizer, error) {
 	}
 }
 
-func GenerateNoncesAndCommitments(secretShare FrostSecretKeyShare) (FirstRoundCommitment, error) {
+func GenerateNoncesAndCommitments(keyPackage FrostKeyPackage) (FirstRoundCommitment, error) {
 	_uniffiRV, _uniffiErr := rustCallWithError(FfiConverterTypeRound1Error{}, func(_uniffiStatus *C.RustCallStatus) RustBufferI {
-		return C.uniffi_frost_uniffi_sdk_fn_func_generate_nonces_and_commitments(FfiConverterTypeFrostSecretKeyShareINSTANCE.Lower(secretShare), _uniffiStatus)
+		return C.uniffi_frost_uniffi_sdk_fn_func_generate_nonces_and_commitments(FfiConverterTypeFrostKeyPackageINSTANCE.Lower(keyPackage), _uniffiStatus)
 	})
 	if _uniffiErr != nil {
 		var _uniffiDefaultValue FirstRoundCommitment
 		return _uniffiDefaultValue, _uniffiErr
 	} else {
 		return FfiConverterTypeFirstRoundCommitmentINSTANCE.Lift(_uniffiRV), _uniffiErr
+	}
+}
+
+func IdentifierFromJsonString(string string) *ParticipantIdentifier {
+	return FfiConverterOptionalTypeParticipantIdentifierINSTANCE.Lift(rustCall(func(_uniffiStatus *C.RustCallStatus) RustBufferI {
+		return C.uniffi_frost_uniffi_sdk_fn_func_identifier_from_json_string(FfiConverterStringINSTANCE.Lower(string), _uniffiStatus)
+	}))
+}
+
+func IdentifierFromString(string string) (ParticipantIdentifier, error) {
+	_uniffiRV, _uniffiErr := rustCallWithError(FfiConverterTypeFrostError{}, func(_uniffiStatus *C.RustCallStatus) RustBufferI {
+		return C.uniffi_frost_uniffi_sdk_fn_func_identifier_from_string(FfiConverterStringINSTANCE.Lower(string), _uniffiStatus)
+	})
+	if _uniffiErr != nil {
+		var _uniffiDefaultValue ParticipantIdentifier
+		return _uniffiDefaultValue, _uniffiErr
+	} else {
+		return FfiConverterTypeParticipantIdentifierINSTANCE.Lift(_uniffiRV), _uniffiErr
+	}
+}
+
+func IdentifierFromUint16(unsignedUint uint16) (ParticipantIdentifier, error) {
+	_uniffiRV, _uniffiErr := rustCallWithError(FfiConverterTypeFrostError{}, func(_uniffiStatus *C.RustCallStatus) RustBufferI {
+		return C.uniffi_frost_uniffi_sdk_fn_func_identifier_from_uint16(FfiConverterUint16INSTANCE.Lower(unsignedUint), _uniffiStatus)
+	})
+	if _uniffiErr != nil {
+		var _uniffiDefaultValue ParticipantIdentifier
+		return _uniffiDefaultValue, _uniffiErr
+	} else {
+		return FfiConverterTypeParticipantIdentifierINSTANCE.Lift(_uniffiRV), _uniffiErr
 	}
 }
 
